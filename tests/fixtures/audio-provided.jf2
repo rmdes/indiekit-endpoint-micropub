@@ -1,8 +1,0 @@
-{
-  "type": "entry",
-  "name": "Audio",
-  "audio": [
-    "https://website.example/baz.mp3",
-    "https://foo.bar/qux.mp3"
-  ]
-}
