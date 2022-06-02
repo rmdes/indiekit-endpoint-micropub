@@ -14,7 +14,7 @@ test("Returns list of previously uploaded files", async (t) => {
 
   t.is(
     result.querySelector("title").textContent,
-    "Internal Server Error - Test configuration"
+    "Not Implemented - Test configuration"
   );
   t.is(
     result.querySelector(".article__body p").textContent,
