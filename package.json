@@ -1,7 +1,7 @@
 {
   "name": "@rmdes/indiekit-endpoint-micropub",
-  "version": "1.0.0-beta.25",
-  "description": "Micropub endpoint for Indiekit with mp-syndicate-to preservation. Enables publishing content to your website using the Micropub protocol.",
+  "version": "1.0.0-beta.26",
+  "description": "Micropub endpoint for Indiekit with custom type-based post discovery. Enables publishing content to your website using the Micropub protocol.",
   "keywords": [
     "indiekit",
     "indiekit-plugin",
