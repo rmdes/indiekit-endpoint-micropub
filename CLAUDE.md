@@ -3,14 +3,16 @@
 ## Package Overview
 
 **Package Name:** `@rmdes/indiekit-endpoint-micropub`
-**Version:** 1.0.0-beta.28
+**Version:** see package.json
 **Type:** Indiekit endpoint plugin
 **License:** MIT
 
-This is a fork of `@indiekit/endpoint-micropub` with two critical custom features:
+This is a fork of `@indiekit/endpoint-micropub` with three critical custom features:
 
 1. **mp-syndicate-to preservation** - Preserves `mp-syndicate-to` in frontmatter for pre-syndication markup
 2. **Type-based post type discovery** - Allows custom post types to use `h: "page"` instead of discovery properties
+3. **Category and search filtering on query endpoint** - Adds `?category=` and `?search=` parameters to `?q=source`
+4. **Syndicator error hardening** - Safe error handling when post creation encounters misconfigured syndicators
 
 ## Why This Fork Exists
 
@@ -63,6 +65,61 @@ if (properties.type && properties.type !== "entry" && postTypes[properties.type]
 ```
 
 Now custom post types can set `h: "page"` in their post type config, and the `type` property survives mf2→JF2 conversion, enabling correct type detection.
+
+### Problem 3: Missing Query Filtering
+
+The upstream endpoint's `?q=source` query did not support filtering by category or search terms, forcing clients to fetch all posts and filter on the client side. For large sites, this was inefficient.
+
+### Solution 3: Category and Search Filtering (April 2026)
+
+**File:** `lib/controllers/query.js` - `querySource()` handler
+
+The fork adds two optional query parameters to `?q=source`:
+
+- **`?q=source&category=slug`** - Filters posts to those with a category matching the slug
+- **`?q=source&search=term`** - Filters posts by searching in title, content, and category fields
+
+Both parameters build MongoDB filter queries with regex-escaped search terms instead of using the standard cursor paginator.
+
+**Commit:** b38c64c
+
+```javascript
+// Example queries
+GET /micropub?q=source&category=indieweb
+→ Returns posts tagged with #indieweb
+
+GET /micropub?q=source&search=webmention
+→ Returns posts containing "webmention" in title/content/category
+```
+
+### Problem 4: Misconfigured Syndicator Crashes
+
+Similar to endpoint-posts, when a syndicator is misconfigured (e.g., Mastodon with empty instance URL), the `?q=config` query endpoint and post creation would throw unhandled errors in the syndicator hook, returning 500 responses.
+
+### Solution 4: Syndicator Error Hardening (June 2026)
+
+**File:** `lib/controllers/query.js` and post-data operations
+
+The fork wraps syndicator hook calls in try-catch blocks. On error, the syndicator is excluded from the response or marked as unavailable, allowing post creation to proceed instead of crashing.
+
+**Commit:** f119e9a
+
+```javascript
+// Before: Direct syndicator hook call (crashes on misconfigured syndicator)
+const syndicationTargets = await callSyndicatorHook("info", ...)
+
+// After: Safe error handling
+const syndicationTargets = [];
+for (const syndicator of syndicators) {
+  try {
+    const info = await syndicator.info();
+    syndicationTargets.push(info);
+  } catch (error) {
+    // Log error, skip this syndicator, continue
+    logger.warn(`Syndicator ${syndicator.uid} failed:`, error);
+  }
+}
+```
 
 ## Architecture
 
@@ -295,7 +352,7 @@ Replace upstream `@indiekit/endpoint-micropub` with this fork:
 ```json
 {
   "overrides": {
-    "@indiekit/endpoint-micropub": "npm:@rmdes/indiekit-endpoint-micropub@^1.0.0-beta.28"
+    "@indiekit/endpoint-micropub": "npm:@rmdes/indiekit-endpoint-micropub@^1.0.0-beta.32"
   }
 }
 ```
