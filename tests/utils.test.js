@@ -61,3 +61,22 @@ test("getPostTemplateProperties sets hasImages when an image is present", () => 
   });
   assert.notEqual(plainResult.hasImages, true);
 });
+
+test("detectHasImages: XHTML self-closing <img/>", () => {
+  assert.equal(
+    detectHasImages({ content: { html: "<p><img/></p>", text: "" } }),
+    true,
+  );
+});
+
+test("detectHasImages: {value} content shape", () => {
+  assert.equal(
+    detectHasImages({ content: { value: '<img src="/a.jpg">' } }),
+    true,
+  );
+});
+
+test("detectHasImages: no-arg / undefined → false (default param)", () => {
+  assert.equal(detectHasImages(), false);
+  assert.equal(detectHasImages(undefined), false);
+});
