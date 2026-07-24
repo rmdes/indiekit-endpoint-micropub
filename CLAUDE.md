@@ -455,6 +455,18 @@ Slugs are generated in this order:
 2. Use first 5 words of `name` if present
 3. Use first 5 characters of MD5 hash of `published` date
 
+### 9. `hasImages` Frontmatter Stamp Is Currently Unconsumed (known dead output)
+
+`lib/utils.js` (`getPostTemplateProperties`) stamps `hasImages: true` into frontmatter
+for image-bearing posts (photo property or inline content image; tests in
+`tests/utils.test.js`). It was added 2026-06-14 for the eleventy-theme's debt-1b
+image-optimization gate, but that gate was removed the next day (theme commit
+`d6ee980`) in favor of a content-substring gate that needs no frontmatter flag.
+**Nothing reads the flag anymore.** It is harmless, accurate metadata — do NOT rush a
+release to remove it (that costs a version bump + OTP npm publish + registry pin +
+per-site deploys for zero runtime change). Fold the removal of `detectHasImages` and
+the stamp into the next release that happens for a real reason.
+
 ## Commands
 
 ```bash
