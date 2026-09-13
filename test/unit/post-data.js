@@ -65,6 +65,13 @@ describe("endpoint-micropub/lib/post-data", async () => {
     assert.equal(result.properties.url, url);
   });
 
+  it("Throws reading post data without a database", async () => {
+    await assert.rejects(
+      postData.read({ ...application, collections: undefined }, url),
+      { cause: "database", message: "database" },
+    );
+  });
+
   it("Updates post by adding properties", async () => {
     const operation = { add: { syndication: ["https://website.example"] } };
     const result = await postData.update(
